@@ -1,0 +1,29 @@
+{
+  "name": "play-2048-game",
+  "version": "0.0.1",
+  "description": "To return a move (0: UP, 1: RIGHT, 2: DOWN, or 3: LEFT) for the game 2048 when presented with a 2048 game board.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imagh/play-2048-game.git"
+  },
+  "keywords": [
+    "2048",
+    "node",
+    "Node.js",
+    "express",
+    "javascript",
+    "expectimax",
+    "backend",
+    "game"
+  ],
+  "author": "imagh <akashg.sde@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/imagh/play-2048-game/issues"
+  },
+  "homepage": "https://github.com/imagh/play-2048-game#readme"
+}
