@@ -5,6 +5,7 @@
   "main": "src/index.mjs",
   "scripts": {
     "start": "node --env-file=.env src/index.mjs",
+    "watch": "nodemon --env-file=.env src/index.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -28,6 +29,7 @@
   },
   "homepage": "https://github.com/imagh/play-2048-game#readme",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.21.0"
   }
 }
