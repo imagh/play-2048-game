@@ -30,6 +30,7 @@
   "homepage": "https://github.com/imagh/play-2048-game#readme",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "sqlite3": "^5.1.7"
   }
 }

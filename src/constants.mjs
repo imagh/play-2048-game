@@ -9,7 +9,7 @@ const moves = [ Move.UP, Move.RIGHT, Move.DOWN, Move.LEFT ];
 
 const Scores = Object.freeze({
   FIXED: 10,
-  EMPTY: 10,
+  EMPTY: 100,
   MERGES: 20,
   SUM: 5,
   MONOTONICITY: 30

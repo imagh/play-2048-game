@@ -1,10 +1,36 @@
 import express from "express";
 import cors from "cors";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 
-import { Move, moves, Scores } from "./constants.mjs";
+// import { createDbConnection, getScore, insert, updateScore } from "./db.mjs";
+import { moves, Scores } from "./constants.mjs";
 import Board from "./board.mjs";
 
 let finalEmptyCells = 0;
+
+// init transportation table
+const transportationTableFile = "data-store/transportation-table.json";
+// const transportationTable = "transportation"
+// let ttDb = await createDbConnection(transportationTableFile);
+let transportationTable = new Map();
+// if (existsSync(transportationTableFile)) {
+//   transportationTable = new Map(JSON.parse(readFileSync(transportationTableFile)));
+// } else {
+//   transportationTable = new Map();
+// }
+
+function handleInterruption() {
+  writeFileSync(
+    transportationTableFile,
+    JSON.stringify(Array.from(transportationTable.entries()))
+  );
+  // ttDb.close();
+  process.exit(0);
+}
+
+process.on('SIGINT', handleInterruption);  // CTRL + C
+process.on('SIGQUIT', handleInterruption);  // Keyboard Quit
+process.on('SIGTERM', handleInterruption);  // `kill` command
 
 const app = express();
 
@@ -49,15 +75,24 @@ app.use('/', (req, res, next) => {
  */
 function determineBestMove(board) {
   let bestMove = null, bestScore = 0;
+  let bRepr = board.board.toString();
+  if (!transportationTable.has(bRepr)) {
+    transportationTable.set(bRepr, [null, null, null, null]);
+  }
 
   for (const move of moves) {
-    let score = calculateScore(board, move);
+    let score = transportationTable.get(bRepr)[move];
+    // let score = await getScore(ttDb, transportationTable, bRepr, move);
+    if (!score && score !== 0) {
+      score = calculateScore(board, move);
+      transportationTable.get(bRepr)[move] = score;
+      // updateScore(ttDb, transportationTable, bRepr, move, score);
+    }
     if (score > bestScore) {
       bestScore = score;
       bestMove = move;
     }
     // console.log(move, score);
-
   }
   finalEmptyCells = 0;
 
@@ -73,9 +108,6 @@ function determineBestMove(board) {
 function calculateScore(board, move) {
   let newBoard = new Board(board);
   newBoard.simulateMove(move);
-  // console.log(board.board);
-  // console.log(newBoard.board);
-  // (board.n, newBoard.n);
 
   if (board.equals(newBoard)) {
     return 0;
@@ -124,14 +156,25 @@ function generateScore(board, currentDepth, depthLimit) {
  * @param {Board} board
  */
 function calculateMoveScore(board, currentDepth, depthLimit) {
-  let bestScore = 0;
+  let bestScore = 0, bRepr = board.board.toString();
+  if (!transportationTable.has(bRepr)) {
+    transportationTable.set(bRepr, [null, null, null, null]);
+  }
 
   for (const move of moves) {
-    let newBoard = new Board(board);
-    newBoard.simulateMove(move);
+    let score = transportationTable.get(bRepr)[move];
+    // let score = await getScore(ttDb, transportationTable, bRepr, move);
+    if (!score && score !== 0) {
+      let newBoard = new Board(board);
+      newBoard.simulateMove(move);
 
-    if (!board.equals(newBoard)) {
-      let score = generateScore(newBoard, currentDepth + 1, depthLimit);
+      if (!board.equals(newBoard)) {
+        let score = generateScore(newBoard, currentDepth + 1, depthLimit);
+        transportationTable.get(bRepr)[move] = score;
+        // updateScore(ttDb, transportationTable, bRepr, move, score);
+        bestScore = Math.max(score, bestScore);
+      }
+    } else {
       bestScore = Math.max(score, bestScore);
     }
   }
@@ -151,7 +194,7 @@ function calculateFinalScore(board) {
     score += Scores.MERGES * board.rowMerges.get(row)[0];
     score -= Scores.SUM * board.sumInRow(row);
     // Handle monotonicity score
-    score -= Scores.MONOTONICITY * Math.min(board.leftMonotonicityInRow(row),
+    score += Scores.MONOTONICITY * Math.max(board.leftMonotonicityInRow(row),
       board.rightMonotonicityInRow(row));
 
     emptyCells += board.emptyCellsInRow(row);
@@ -162,7 +205,7 @@ function calculateFinalScore(board) {
     score += Scores.MERGES * board.colMerges.get(col)[0];
     score -= Scores.SUM * board.sumInCol(col);
     // Handle monotonicity score
-    score -= Scores.MONOTONICITY * Math.min(board.leftMonotonicityInCol(col),
+    score += Scores.MONOTONICITY * Math.max(board.leftMonotonicityInCol(col),
       board.rightMonotonicityInCol(col));
   }
 
